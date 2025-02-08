@@ -1,0 +1,11 @@
+
+SLIDER(mult, 0..30);
+
+vec3 gen(float t) {
+	vec3 v;
+	v.x = cos(TWO_PI * exp(mult) * t);
+	v.y = sin(TWO_PI * exp(mult) * t);
+	v.z = log(mult * t);
+
+	return v;
+}
