@@ -1,0 +1,65 @@
+SLIDER(depth, 1..10);   // Limits max depth to prevent crashes
+SLIDER(angle, 0..PI); // Branching angle in degrees
+SLIDER(length, 0.1..1); // Initial trunk length
+SLIDER(branch_decay, 0..1);
+
+
+const int maxBranches = 1024;  // Prevents excessive memory usage
+const int pointsPerBranch = 100; // Smoothness of each branch
+
+struct Branch {
+    vec3 start;
+    vec3 end;
+};
+
+// Array to store branches
+Branch branches[maxBranches];
+int branchCount = 0;
+bool treeGenerated = false; // Prevent regenerating every frame;
+
+float fract(float x) {return x - floor(x);}
+
+// Function to add a new branch
+void addBranch(vec3 start, float length, float direction, int level) {
+    if (branchCount >= maxBranches || level >= depth) return;  // Stop if we hit limits
+
+    vec3 end = vec3(
+        start.x + length * cos(direction),
+        start.y + length * sin(direction),
+        0
+    );
+
+    // Store branch safely
+    branches[branchCount].start = start;
+    branches[branchCount].end = end;
+    branchCount++;
+
+    // Prevent excessive recursion by reducing branching at deeper levels
+    if (level < depth - 1 && branchCount + 2 < maxBranches) {
+        addBranch(end, length * branch_decay, direction + angle, level + 1);
+        addBranch(end, length * branch_decay, direction - angle, level + 1);
+    }
+}
+
+// Generate tree safely
+void generateTree() {
+    branchCount = 0;
+    addBranch(vec3(0, -1, 0), length, PI / 2, 1);
+}
+
+vec3 gen(float t) {
+    generateTree();  // Generate tree ONCE
+
+    if (branchCount == 0) return vec3(0, 0, 0);  // Prevent division by zero
+
+    int index = int(t * branchCount) % branchCount;
+    Branch b = branches[index];
+
+    // Interpolate along branch
+    float progress = fract(t * branchCount);
+    return vec3(
+        b.start.x + (b.end.x - b.start.x) * progress,
+        b.start.y + (b.end.y - b.start.y) * progress,
+        0
+    );
+}
