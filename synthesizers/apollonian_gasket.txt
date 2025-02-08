@@ -1,0 +1,54 @@
+// This doesn't really work...
+
+SLIDER(depth, 0..5); // Controls recursion depth
+SLIDER(scale, 2..3); // Controls circle shrink factor
+
+// Function to generate a single circle at (cx, cy) with radius r
+vec3 drawCircle(float t, vec3 center, float radius) {
+    return vec3(center.x + radius * cos(TWO_PI * t),
+                center.y + radius * sin(TWO_PI * t),
+                0);
+}
+
+// Recursive function for Apollonian Gasket (correct placement inside mother circle)
+vec3 apollonian(float t, vec3 center, float radius, int d) {
+    if (d >= depth) return drawCircle(t, center, radius); // Base case
+
+    // Divide t into sections for different circles
+    float section = 1.0 / 4.0;  
+
+    // Compute the radius of new circles
+    float newR = radius / scale;
+
+    // Conditional dist based on whether it's the first circle or not
+    float dist;
+    if (d == 0) {
+        dist = radius - newR;  // For the first circle
+    } else {
+        dist = newR + radius;  // For subsequent circles
+    }
+
+    // Equilateral triangle placement for tangent circles (inside mother circle)
+    float offsetX = dist * cos(PI / 6);  // Cos(30°) for equilateral triangle
+    float offsetY = dist * sin(PI / 6);  // Sin(30°)
+
+    if (t < section) {
+        return drawCircle(t / section, center, radius); // Main circle
+    } 
+    else if (t < 2 * section) {
+        return apollonian((t - section) / section, vec3(center.x + offsetX, center.y + offsetY, 0), -newR, d + 1);
+    }
+    else if (t < 3 * section) {
+        return apollonian((t - 2 * section) / section, vec3(center.x - offsetX, center.y + offsetY, 0), -newR, d + 1);
+    }
+    else {
+        return apollonian((t - 3 * section) / section, vec3(center.x, center.y - dist, 0), -newR, d + 1);
+    }
+}
+
+
+
+// Main function to generate points
+vec3 gen(float t) {
+    return apollonian(t, vec3(0, 0, 0), 0.5, 0);
+}
