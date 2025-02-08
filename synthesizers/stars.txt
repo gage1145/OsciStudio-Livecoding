@@ -1,0 +1,51 @@
+// Makes pretty stars
+// Uses the collatz function
+
+SLIDER(n_max, 2..100);
+SLIDER(length, 0..1);
+
+int collatz(int x) {
+	// odd
+	if (x % 2) {
+		return (x * 3 + 1) / 2;
+	} 
+	// even
+	else {
+		return x / 2;
+	}
+}
+
+// Generates Collatz trajectory visualization
+vec3 gen(float t) {
+    int n = int(n_max);  // Convert slider to integer range
+
+    // Select a starting number based on `t`
+    int start = 2 + int(t * (n - 2));  
+    int current = start;
+
+    // Start visualization at the center
+    vec3 prev = vec3(0, 0, 0);
+    vec3 v = prev;
+
+    float angle = 0.0;  // Tracks direction
+
+    while (current != 1) {
+        int next = collatz(current);
+
+        // Update angle based on odd/even rule
+        if (next % 2) {
+            angle += PI / 6;  // Turn right for odd numbers
+        } else {
+            angle -= PI / 11;  // Turn left for even numbers
+        }
+
+        // Compute new position
+        v.x = prev.x + length * cos(angle);
+        v.y = prev.y + length * sin(angle);
+        prev = v;  // Store the last position
+
+        current = next;
+    }
+
+    return v;
+}
