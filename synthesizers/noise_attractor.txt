@@ -1,0 +1,18 @@
+SLIDER(a);
+SLIDER(b);
+SLIDER(c);
+SLIDER(d);
+
+vec3 prev;
+
+vec3 gen(float t){
+	vec3 v;
+
+	v.x = prev.y - cos((prev.z * a + d) * two_pi);
+	v.y = prev.z + sin((prev.z * b + d) * two_pi);
+	v.z = prev.y * sin(prev.x * a * pi) + c;
+
+	
+	prev = v;
+	return v;
+}
