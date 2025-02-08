@@ -1,0 +1,130 @@
+/*
+Very bad implementation of a mandelbrot for Oscistudio.
+Set the frequency of the channel to be very low (well below 1) for best viewing.
+Turn up the afterglow in settings as well if you want the image to persist.
+
+Enjoy!
+
+WalkingWave
+
+2018-12-23 hansi: change iteration order of points, so that we get the rough outline of the mandelbrot. 
+*/
+
+#include<PathRecorder.h>
+
+
+
+
+float scale=4;// size of a side of the image/coordinate box to use
+vec3 offset;  // bottom left coordinate of coordinate box
+
+
+
+#define resolution 2000
+
+
+
+cmplxf points[resolution][resolution];
+bool good[resolution][resolution];
+PathRecorder<15000> vecs;
+int pts_used = 0; 
+
+
+
+//declare functions
+void setup(); //run on startup
+void update();// built in. run every frame?
+cmplxf cmulf(cmplxf a,cmplxf b); // for multiplying complex numbers together
+bool mandelbrot_test(cmplxf z,int depth); // test if a point is in the set up to depth iterations
+vec3 gen(float t);//built in
+
+
+
+
+
+void update(){ //don't need it
+
+}
+
+void setup(){
+
+	
+	offset = {-scale/2,-scale/2};//coordinate of bottom left of the box
+
+	//now go through each point in the coordinate box and add it to the path recorder if it is in the set:
+	for(int j=0;j<resolution;j++){// for each row
+		for(int i=0;i<resolution;i++){ // for each column
+			cmplxf z={offset.x+(scale*i)/resolution,offset.y+(scale*j)/resolution};// change coordinate: x,y to Re(),Im() and fit to box
+			points[j][i]=z;
+			if(mandelbrot_test(z,20)){
+				//If a point is in the set set the boolean for that location to true
+				good[j][i]=true;
+			}
+			else{
+				good[j][i]=false;
+			}				
+
+		}
+	}
+	
+	//cleanup. We need to remove interior points by rejecting completetly surrounded points:
+	auto handle_pt = [&](int i, int j){
+			if(good[j][i]){
+				if(good[j-1][i]==true&&good[j+1][i]==true&&good[j][i-1]==true&&good[j][i+1]==true&&good[j-1][i+1]==true&&good[j-1][i-1]==true&&good[j+1][i-1]==true&&good[j+1][i+1]==true){
+					// do nothing ... 
+					}
+				else{
+					vecs.add({points[j][i].r,points[j][i].i});
+					pts_used ++;
+				}
+			}
+	};
+
+	for(int i=1;i<resolution-1;i++){
+		for(int j=resolution/2-1;j>=1;j--){
+			handle_pt(i,j);
+		}
+	}
+	for(int i=resolution-2;i>=1;i--){
+		for(int j=resolution/2;j<resolution-1;j++){
+			handle_pt(i,j);
+		}
+	}
+
+
+	if(pts_used==0) pts_used = 1; 
+}
+
+cmplxf cmulf(cmplxf a,cmplxf b){
+	
+	cmplxf *res;
+	return {b.r * a.r  -  b.i * a.i,b.r * a.i  +  b.i * a.r};
+}
+
+cmplxf cadd(cmplxf a,cmplxf b){
+	return {a.r+b.r,a.i+b.i};
+}
+
+
+bool mandelbrot_test(cmplxf c,int depth){
+	cmplxf z = {0,0};
+
+	bool res=true;
+	while(depth>0){
+		
+		z=cadd(cmulf(z,z),c);		
+		if((z.r*z.r+z.i*z.i)>4){
+			res=false;
+			break;
+		}		
+
+		depth--;	
+	}
+	return res;
+}
+
+
+vec3 gen(float t){
+	float t2 = t*pts_used/(float)vecs.N; 
+	return vecs.gen(t2,false)*0.5+vec3{0.25,0};
+}
