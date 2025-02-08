@@ -1,0 +1,17 @@
+SLIDER(dx,-1..1);
+SLIDER(dy,-1..1);
+SLIDER(bright);
+SLIDER(s, 0..10);
+SLIDER(f, 0..10);
+PHASOR(offset).setRange("freq",0,2).setDefaultValue("freq",1);
+
+vec3 gen(float t){
+	t = tri(t); // back and forward
+	t = s + pow(t,2.5+2*bright); // outside brighter
+	vec3 v;
+
+	v = circle(6*t+1-offset) * (1-t * f); 
+	v.x += scale_lin(pow(t,0.5),0,1,0,dx);
+	v.y += scale_lin(pow(t,0.5),0,1,0,dy);
+	return v;
+}
