@@ -1,0 +1,56 @@
+SLIDER(n_max, 2..20000);      // Maximum starting number
+SLIDER(length, 0.01..0.1);  // Step size per iteration
+SLIDER(angle1, 1..25);
+SLIDER(angle2, 1..25);
+
+// Collatz function: returns next value in the sequence
+int collatz(int x) {
+    return (x % 2) ? (x * 3 + 1) : x / 2;
+}
+
+// Persistent variables for maintaining the visualization
+vec3 prev = vec3(0, 0, 0);
+int current = 2;
+float angle = 0.0;
+bool newSequence = true;
+
+// Generates static Collatz sequences
+vec3 gen(float t) {
+    int n = int(n_max);  // Convert slider to integer range
+
+    // Start a new sequence if needed
+    if (newSequence) {
+        current = 2 + int(t * (n - 2));  // Pick a new starting number
+        prev = vec3(0, 0, 0);  // Reset position
+        angle = 0.0;  // Reset angle
+        newSequence = false;
+    }
+
+    // Generate the next step in the Collatz sequence
+    if (current != 1) {
+        int next = collatz(current);
+
+        // Apply a deterministic turning rule
+        if (next % 2) {
+            angle += PI / angle1;  // Turn right for odd numbers
+        } else {
+            angle -= PI / angle2;  // Turn left for even numbers
+        }
+
+        // Compute new position relative to the previous one
+        vec3 v;
+        v.x = prev.x + length * cos(angle);
+        v.y = prev.y + length * sin(angle);
+        v.z = sin(t * prev.x) * cos(t * prev.y);
+
+        // Store previous position and update sequence
+        prev = v;
+        current = next;
+
+        return v;
+    } else {
+        // Sequence finished, prepare for new one
+        newSequence = true;
+        return prev;  // Hold last position until a new sequence starts
+    }
+}
