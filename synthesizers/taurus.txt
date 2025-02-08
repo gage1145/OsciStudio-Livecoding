@@ -1,0 +1,20 @@
+//this makes a mobius loop
+//or any kind of twisted torus
+
+SLIDER(radius, 0.1..2);
+SLIDER(width, 0.1..1);
+SLIDER_INT(twist, 1..32); //twist and twirl are the best
+SLIDER_INT(twirl, 1..32);  //names I could come up
+
+vec3 gen(float t){
+	vec3 v;
+
+	float alpha = twist * 2 * PI;
+	float beta = twirl * 2 * PI;
+
+	v.x = (radius + width * cos(t * beta)) * cos(t * alpha);
+	v.y = (radius + width * cos(t * beta)) * sin(t * alpha);
+	v.z = width * sin(t * beta);
+
+	return v;
+}
