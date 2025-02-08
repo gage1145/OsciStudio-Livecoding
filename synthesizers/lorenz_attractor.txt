@@ -1,0 +1,24 @@
+SLIDER(dt, 0.000001..0.024);
+SLIDER(a, 1..20);
+SLIDER(b, 0..30);
+SLIDER(c, 1..6);
+
+float x = 0.01;
+float y = 0;
+float z = 0;
+
+vec3 prev;
+
+vec3 gen(float t) {
+	vec3 v;
+	
+	v.x = a * (y - x);
+	v.y = x * (b - z) - y;
+	v.z = x * y - c * z;
+
+	x += v.x * dt;
+	y += v.y * dt;
+	z += v.z * dt;
+
+	return v * 0.004;
+}

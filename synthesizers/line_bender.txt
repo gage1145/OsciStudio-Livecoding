@@ -1,0 +1,46 @@
+PHASOR(bend_factor, 0.001…1);
+PHASOR(pivot);
+SLIDER(p1x, -1..1);
+SLIDER(p1y, -1..1);
+SLIDER(p2x, -1..1);
+SLIDER(p2y, -1..1);
+
+
+
+vec3 lerp(vec3 p1, vec3 p2, float t) {
+	return p1 + (p2-p1) * t;
+}
+
+vec3 getPosOnBentLine(vec3 lineStart, vec3 lineEnd, float t, float bendFactor, float pivot) {
+	if (bendFactor == 0) bendFactor = 0.00001;
+	vec3 segmentVector = lineEnd - lineStart;
+	float lineLength = (segmentVector).length();
+	float circleRad = lineLength / (bendFactor * 2 * PI);
+	vec3 circleCenter = lerp(lineStart, lineEnd, pivot) + vec3(-segmentVector.y, segmentVector.x, 0) * circleRad / lineLength;
+
+	float angle = bendFactor * (1.0 - (t+pivot)) * 2 * PI - atan2(segmentVector.x, segmentVector.y);
+	vec3 posOnCircle = circleCenter + vec3(cos(angle), sin(angle), 0) * circleRad;
+	return posOnCircle;
+}
+
+int state = 0;
+
+vec3 gen(float t){
+	vec3 startPoint = vec3(p1x, p1y, 0);
+	vec3 endPoint = vec3(p2x, p2y, 0);
+;
+	if (state == 0) return(getPosOnBentLine(startPoint, endPoint, tri(t), bend_factor, pivot));
+	else return lerp(startPoint, endPoint, tri(t));
+ }
+
+
+int duration = 30000;
+int counter = 0;
+
+void update() {
+	if (duration == 0) duration = 1;
+	
+	counter++;
+	counter %= duration;
+	state = (counter > duration/2) ? 0 : 1;
+}
