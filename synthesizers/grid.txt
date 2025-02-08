@@ -1,0 +1,89 @@
+// Adjust scale (spacing between grid lines)
+SLIDER(scale, 1..100);
+SLIDER(z_warp, 0..4);
+
+const int pointsPerLine = 1000;  // Points per grid line for smooth curves
+
+// Global state variables for tracking last positions
+bool x_is_positive = false;
+bool y_is_positive = false;
+bool right = false;
+bool top = false;
+
+vec3 gen(float t) {
+    float step          = 2.0 / floor(scale);  // Grid spacing
+    int numHorizontal   = floor(2.0 / step) + 1;  
+    int numVertical     = floor(2.0 / step) + 1;
+    int totalHorizontal = numHorizontal * pointsPerLine;
+    int totalVertical   = numVertical * pointsPerLine;
+    int totalPoints     = totalHorizontal + totalVertical;
+    int index           = int(t * totalPoints) % totalPoints;
+
+    vec3 v;
+    
+    if (index < totalHorizontal) {
+        // Drawing horizontal lines first
+        int lineIndex = index / pointsPerLine;
+        int pointIndex = index % pointsPerLine;
+        
+        // Adjusting y-direction based on previous vertical endpoint
+        v.y = (y_is_positive)
+            ?  1.0 - lineIndex * step  // Start from top
+            : -1.0 + lineIndex * step; // Start from bottom
+        
+        // Adjusting x-direction based on previous horizontal endpoint
+        if (!right) {
+            v.x = (lineIndex % 2 == 0) 
+                ? -1.0 + (float(pointIndex) / float(pointsPerLine - 1)) * 2.0  
+                :  1.0 - (float(pointIndex) / float(pointsPerLine - 1)) * 2.0;
+        } else {
+            v.x = (lineIndex % 2 == 0) 
+                ?  1.0 - (float(pointIndex) / float(pointsPerLine - 1)) * 2.0  
+                : -1.0 + (float(pointIndex) / float(pointsPerLine - 1)) * 2.0;
+        }
+
+        // Update flags when finishing a horizontal segment
+        if (pointIndex == pointsPerLine - 1) {
+            x_is_positive = v.x > 0;
+            top = v.y > 0;
+        }
+    }
+    else {
+        // Move to vertical lines after horizontal lines are done
+        index -= totalHorizontal;
+        int lineIndex = index / pointsPerLine;
+        int pointIndex = index % pointsPerLine;
+        
+        // Adjusting x-direction based on previous horizontal endpoint
+        v.x = (x_is_positive)
+            ?  1.0 - lineIndex * step  // Start from right
+            : -1.0 + lineIndex * step; // Start from left
+
+        // Adjusting y-direction based on previous vertical endpoint
+        if (!top) {
+            v.y = (lineIndex % 2 == 0)
+                ? -1.0 + (float(pointIndex) / float(pointsPerLine - 1)) * 2.0  
+                :  1.0 - (float(pointIndex) / float(pointsPerLine - 1)) * 2.0; 
+        } else {
+            v.y = (lineIndex % 2 == 0)
+                ?  1.0 - (float(pointIndex) / float(pointsPerLine - 1)) * 2.0  
+                : -1.0 + (float(pointIndex) / float(pointsPerLine - 1)) * 2.0;
+        }
+
+        // Update flags when finishing a vertical segment
+        if (pointIndex == pointsPerLine - 1) {
+            y_is_positive = v.y > 0;
+            right = v.x > 0;
+        }
+    }
+	if (z_warp < 1) {
+		v.z = 0;
+	}else if (z_warp < 2) {
+		v.z = asin(v.x + v.y * t);
+    } else if (z_warp < 3) {
+		v.z = acos((v.x + v.y) * t);
+	} else {
+		v.z = atan((v.x + v.y) * t);
+	}
+    return v;
+}
