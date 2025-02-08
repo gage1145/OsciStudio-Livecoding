@@ -1,0 +1,33 @@
+SLIDER (volx, 0..1);
+SLIDER (voly, 0..1);
+SLIDER (vertoffset, -1..1);
+SLIDER (wave, 0..10);
+SLIDER (base, 0..1);
+
+SLIDER (freqmulti, 10..60);
+
+PHASOR(movement); 
+
+vec3 gen(float t){
+    vec3 v;	
+
+    //a "fast" circle
+    v.x = sin(t * two_pi * freqmulti) * volx;
+    v.y = cos(t * two_pi * freqmulti) * voly;
+	v.z = cos(t * two_pi * freqmulti) * voly;
+
+    //sawtooth
+    v.y += t - 0.5 + vertoffset;
+
+    //shroom
+	if(t>=0.75){
+		v.x *= sin(t * 2 * pi); // make the cap
+	}
+	else{
+		v.x *= base;
+		v.z *= base;
+	}
+
+	v.x += wave * cos(movement * two_pi) * t;
+    return v;
+}
