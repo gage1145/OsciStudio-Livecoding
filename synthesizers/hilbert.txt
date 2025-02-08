@@ -1,0 +1,49 @@
+SLIDER(depth, 1..10);
+SLIDER(speed, 1..2);
+
+// Linear interpolation function (manual mix replacement)
+vec3 lerp(vec3 a, vec3 b, float t) {
+    return a * (1.0 - t) + b * t;
+}
+
+// Hilbert curve mapping function
+vec3 hilbert(int index, int n) {
+    int N = 1 << n;  // Number of points in the curve
+    int x = 0, y = 0;
+
+    for (int i = 1; i < N; i *= 2) {
+        int rx = (index & 2) > 0;
+        int ry = ((index ^ rx) & 1) > 0;
+
+        if (ry == 0) {
+            if (rx == 1) {
+                x = i - 1 - x;
+                y = i - 1 - y;
+            }
+            int temp = x;
+            x = y;
+            y = temp;
+        }
+
+        x += rx * i;
+        y += ry * i;
+        index /= 4;
+    }
+
+    // Normalize to [-1,1] range
+    return vec3(float(x) / (N - 1) * 2.0 - 1.0, float(y) / (N - 1) * 2.0 - 1.0, 0);
+}
+
+// Generate smooth oscilloscope waveform
+vec3 gen(float t) {
+    int n = int(depth);
+    int N = 1 << (2 * n);  // Total number of steps in the curve
+    float index = t * (N - 1);
+
+    int idx1 = int(index);    // Current Hilbert curve index
+    int idx2 = min(idx1 + 1, N - 1);  // Next index (avoid overflow)
+    float blend = index - (long)index;  // Fractional part for interpolation
+
+    // Use custom LERP function instead of mix()
+    return lerp(hilbert(idx1, n), hilbert(idx2, n), blend);
+}
