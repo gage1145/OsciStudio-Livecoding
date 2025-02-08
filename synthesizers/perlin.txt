@@ -1,0 +1,55 @@
+SLIDER(NOISE_SCALE, 0..10);
+PHASOR(xmod);
+PHASOR(ymod);
+
+float fract(float x) {
+    return x - floor(x);
+}
+
+float fade(float t) {
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+float grad(int hash, float x, float y) {
+    int h = hash & 3;  
+    float u = h < 2 ? x : y;
+    float v = h < 2 ? y : x;
+    return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+}
+
+float lerp(float a, float b, float t) {
+    return a * (1.0 - t) + b * t;
+}
+
+float perlin(float x, float y) {
+    x *= NOISE_SCALE;
+    y *= NOISE_SCALE;
+
+    int xi = int(floor(x)) & 255;
+    int yi = int(floor(y)) & 255;
+    float xf = fract(x);
+    float yf = fract(y);
+
+    float u = fade(xf);
+    float v = fade(yf);
+
+    int aa = xi + yi;
+    int ab = xi + yi + 1;
+    int ba = xi + 1 + yi;
+    int bb = xi + 1 + yi + 1;
+
+    float gradAA = grad(aa, xf, yf);
+    float gradAB = grad(ab, xf, yf - 1);
+    float gradBA = grad(ba, xf - 1, yf);
+    float gradBB = grad(bb, xf - 1, yf - 1);
+
+    float x1 = lerp(gradAA, gradBA, u);
+    float x2 = lerp(gradAB, gradBB, u);
+    return lerp(x1, x2, v);
+}
+
+vec3 gen(float t) {
+    float x = perlin(t * xmod * 10, 0.0);  // Should vary smoothly
+    float y = perlin(0.0, t * ymod * 10);
+    return vec3(x, y, sin(2 * y +  2 * x));
+}
