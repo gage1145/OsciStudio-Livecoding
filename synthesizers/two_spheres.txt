@@ -1,0 +1,25 @@
+#include <Geometry.h>
+
+
+SLIDER(x, -1..1);
+SLIDER(y, -1..1);
+SLIDER(z, -1..1);
+SLIDER(size1, 0..1);
+SLIDER(a, -1..1);
+SLIDER(b, -1..1);
+SLIDER(c, -1..1);
+SLIDER(size2, 0..1);
+TOGGLE(both);
+
+vec3 gen(float t) {
+    Sphere sphere1({x, y, z}, size1);
+    Sphere sphere2({a, b, c}, size2);
+
+    // Interleave points: Use one sphere for even `t` values, another for odd
+	if (both) {    
+		return (t * 2 < 0.5) ? sphere1.gen(t * 4) : sphere2.gen(t * 4);
+	} else {
+		return sphere1.gen(t);
+	}
+}
+
